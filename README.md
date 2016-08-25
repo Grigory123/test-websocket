@@ -1,2 +1,5 @@
-# test-websocket
-test
+Привет, всем.
+
+Это тест Websocket.
+
+Для настроки теста используй sudo ./script
