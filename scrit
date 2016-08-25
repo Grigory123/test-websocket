@@ -1,0 +1,41 @@
+#!/bin/bash
+apt-get -y install git
+apt-get -y install apache2
+apt-get -y install apache2-dev
+apt-get -y install scons
+
+git clone git://github.com/disconnect/apache-websocket.git
+cd apache-websocket/
+scons
+scons install
+cd examples
+scons
+scons install
+cp client.html /var/www/html/
+cp increment.html /var/www/html/
+
+D=`grep -c "mod_websocket" /etc/apache2/apache2.conf`
+echo $D
+if  [[ $D  -eq 0 ]]
+then
+echo yes
+echo LoadModule websocket_module   /usr/lib/apache2/modules/mod_websocket.so >> /etc/apache2/apache2.conf
+echo LoadModule websocket_draft76_module   /usr/lib/apache2/modules/mod_websocket_draft76.so >> /etc/apache2/apache2.conf
+echo "<IfModule mod_websocket.c>" >> /etc/apache2/apache2.conf
+echo " <Location /echo>" >> /etc/apache2/apache2.conf
+echo "   SetHandler websocket-handler" >> /etc/apache2/apache2.conf
+echo "   WebSocketHandler /usr/lib/apache2/modules/mod_websocket_echo.so echo_init" >> /etc/apache2/apache2.conf
+echo " </Location>" >> /etc/apache2/apache2.conf
+echo "</IfModule>" >> /etc/apache2/apache2.conf
+
+echo "<IfModule mod_websocket_draft76.c>" >> /etc/apache2/apache2.conf
+echo " <Location /dumb-increment>" >> /etc/apache2/apache2.conf
+echo "   SetHandler websocket-handler" >> /etc/apache2/apache2.conf
+echo "   WebSocketHandler /usr/lib/apache2/modules/mod_websocket_dumb_increment.so dumb_increment_init" >> /etc/apache2/apache2.conf
+echo " </Location>" >> /etc/apache2/apache2.conf
+echo "</IfModule>" >> /etc/apache2/apache2.conf
+else
+echo no
+fi
+service apache2 restart
+
